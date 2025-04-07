@@ -1,0 +1,4 @@
+int a
+float b = 2.5
+char letra
+bool esValido = true

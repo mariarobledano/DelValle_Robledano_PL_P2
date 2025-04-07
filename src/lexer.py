@@ -68,7 +68,11 @@ t_MINUS  = r'-'
 t_TIMES  = r'\*'
 t_DIVIDE = r'/'
 
-
+t_EQ = r'=='
+t_GT = r'>'
+t_GE = r'>='
+t_LT = r'<'
+t_LE = r'<='
 
 lexer = lex.lex()
 
