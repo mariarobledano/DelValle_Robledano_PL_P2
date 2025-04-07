@@ -1,0 +1,20 @@
+int edad
+float temperatura
+char letra
+bool es_valido
+
+edad = 20
+temperatura = 36.6
+letra = 'A'
+es_valido = true
+
+# Esto es un comentario
+
+'''
+Comentario
+de varias
+lineas
+'''
+
+float _variable123
+int x1_y2_z3

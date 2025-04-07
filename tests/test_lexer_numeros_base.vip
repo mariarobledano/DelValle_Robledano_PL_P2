@@ -1,0 +1,17 @@
+int binario
+int octal
+int hexa
+
+binario = 0b1011
+octal = 0o71
+hexa = 0xFF
+
+# Algunos casos límite
+int binario2
+binario2 = 0b0001
+
+int octal2
+octal2 = 0o007
+
+int hexa2
+hexa2 = 0xA3B9

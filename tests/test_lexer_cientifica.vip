@@ -1,0 +1,9 @@
+float a
+float b
+float c
+float d
+
+a = 1e2
+b = 10e-3
+c = 3.5e+1
+d = 0.0e0

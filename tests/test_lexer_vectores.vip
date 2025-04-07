@@ -1,0 +1,4 @@
+int[5] miVector
+miVector[0] = 10
+miVector[1] = 20
+miVector[len] = 30
