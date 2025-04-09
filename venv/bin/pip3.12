@@ -1,4 +1,6 @@
-#!/home/maria/42/Procesadores/DelValle_Robledano_PL_P2/venv/bin/python3
+#!/bin/sh
+'''exec' "/home/luis/Documentos/UC3M/Curso 4/Procesadores de Lenguaje/P2/DelValle_Robledano_PL_P2/venv/bin/python3" "$0" "$@"
+' '''
 # -*- coding: utf-8 -*-
 import re
 import sys

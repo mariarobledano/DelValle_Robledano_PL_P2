@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV /home/maria/42/Procesadores/DelValle_Robledano_PL_P2/venv
+set -gx VIRTUAL_ENV '/home/luis/Documentos/UC3M/Curso 4/Procesadores de Lenguaje/P2/DelValle_Robledano_PL_P2/venv'
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH

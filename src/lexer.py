@@ -3,6 +3,12 @@ from viper_tokens import tokens, reserved
 
 class Lexer:
     tokens = tokens 
+    # Comentarios multilínea
+    def t_MULTILINE_COMMENT(self, t):
+        r"'''(.|\n)*?'''"
+        t.lexer.lineno += t.value.count('\n')
+        return None
+    
     def __init__(self):
         self.lexer = lex.lex(module=self)
 
@@ -38,15 +44,7 @@ class Lexer:
         return t
 
     # Comentarios de una línea
-    def t_COMMENT(self, t):
-        r'\#.*'
-        pass
-
-    # Comentarios multilínea
-    def t_MULTILINE_COMMENT(self, t):
-        r"\'\'\'(.|\n)*?\'\'\'"
-        t.lexer.lineno += t.value.count('\n')
-        pass
+    t_ignore_COMMENT = r'\#.*'
 
     # Contador de líneas
     def t_NEWLINE(self, t):
