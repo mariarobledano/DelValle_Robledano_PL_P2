@@ -33,18 +33,35 @@ class Parser:
             p[0] = p[1] + [p[2]]
 
     def p_statement_declaration(self, p):
-        '''statement : type ID
-                     | type ID ASSIGN expression'''
+        '''statement : type id_list
+                     | type id_list ASSIGN expression'''
         if len(p) == 3:
             p[0] = ('decl', p[1], p[2])
         else:
             p[0] = ('decl_assign', p[1], p[2], p[4])
 
+    def p_id_list_single(self, p):
+        'id_list : ID'
+        p[0] = [p[1]]
+
+    def p_id_list_rec(self, p):
+        'id_list : id_list COMMA ID'
+        p[0] = p[1] + [p[3]]
+
+
     def p_type(self, p):
-        '''type : INT
-                | FLOAT
-                | CHAR
-                | BOOL'''
+        '''type : base_type
+                | base_type LBRACKET NUMBER RBRACKET'''
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            p[0] = ('vector', p[1], p[3])
+
+    def p_base_type(self, p):
+        '''base_type : INT
+                    | FLOAT
+                    | CHAR
+                    | BOOL'''
         p[0] = p[1]
 
     def p_expression_binaria(self, p):
@@ -82,8 +99,12 @@ class Parser:
         'expression : ID'
         p[0] = ('var', p[1])
 
+    def p_expression_array_access(self, p):
+        'expression : expression LBRACKET expression RBRACKET'
+        p[0] = ('array_access', p[1], p[3])
+
     def p_statement_assign(self, p):
-        'statement : ID ASSIGN expression'
+        'statement : expression ASSIGN expression'
         p[0] = ('assign', p[1], p[3])
 
     def p_statement_function(self, p):
@@ -125,6 +146,11 @@ class Parser:
     def p_statement_type_def(self, p):
         'statement : TYPE ID COLON LBRACE field_list RBRACE'
         p[0] = ('type_def', p[2], p[5])
+
+    def p_statement_instance(self, p):
+        'statement : ID ID'
+        p[0] = ('instance', p[1], p[2])
+
 
     def p_field_list(self, p):
         '''field_list : field

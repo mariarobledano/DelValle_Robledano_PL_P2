@@ -1,7 +1,11 @@
 type Persona:
-    int edad
-    char inicial
+{
+  int edad
+  char inicial
+}
 
 Persona juan
+
 juan.edad = 30
 juan.inicial = 'J'
+
