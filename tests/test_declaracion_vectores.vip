@@ -1,0 +1,5 @@
+int edad
+float temperatura
+char[4] letras
+bool esValido
+int[3] numeros

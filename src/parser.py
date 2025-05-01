@@ -1,11 +1,14 @@
 import ply.yacc as yacc
 from viper_tokens import tokens as token_list
+from symbol_table import SymbolTable
+
 
 
 class Parser:
     def __init__(self):
         self.tokens = token_list
         self.parser = yacc.yacc(module=self, write_tables=False)
+        self.symbol_table = SymbolTable()
 
     # ----------------------------- Precedencia de operadores -----------------------------
     precedence = (
@@ -61,10 +64,24 @@ class Parser:
     def p_declaration(self, p):
         '''declaration : type id_list
                        | type id_list ASSIGN expression'''
+        tipo = p[1]
+        id_list = p[2]
+
+        for var in id_list:
+            try:
+                if isinstance(tipo, tuple) and tipo[0] == 'vector':
+                    tipo_base = tipo[1]
+                    tamaño = tipo[2]
+                    self.symbol_table.add_vector(var, tipo_base, tamaño)
+                else:
+                    self.symbol_table.add_variable(var, tipo)
+            except Exception as e:
+                print(e)
+
         if len(p) == 3:
-            p[0] = ('decl', p[1], p[2])
+            p[0] = ('decl', tipo, id_list)
         else:
-            p[0] = ('decl_assign', p[1], p[2], p[4])
+            p[0] = ('decl_assign', tipo, id_list, p[4])
 
     def p_assignment(self, p):
         'assignment : expression ASSIGN expression'

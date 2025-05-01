@@ -58,6 +58,7 @@ class ParserRunner:
                         result = self.parser.parse(data, lexer=self.lexer) 
                         print(f"\U0001F333 Árbol sintáctico de {filename}:\n")
                         self.pretty_print(result)
+                        self.parser.symbol_table.debug_print()  
                         print()
                     except Exception as e:
                         print(f"\u274C Error de sintaxis en {filename}: {e}\n")
