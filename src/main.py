@@ -55,14 +55,12 @@ class ParserRunner:
                 if success:
                     print(f"\u2705 {filename} procesado correctamente. Tokens en: tests/tokens/{os.path.basename(output_path)}")
                     try:
-                        result = self.parser.parse(data, lexer=self.lexer)
+                        result = self.parser.parse(data, lexer=self.lexer) 
                         print(f"\U0001F333 Árbol sintáctico de {filename}:\n")
                         self.pretty_print(result)
                         print()
                     except Exception as e:
                         print(f"\u274C Error de sintaxis en {filename}: {e}\n")
-                else:
-                    print(f"\u274C {filename} tuvo errores.\n")
 
 # Para ejecutar desde consola:
 if __name__ == "__main__":

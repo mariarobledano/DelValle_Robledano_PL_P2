@@ -18,37 +18,84 @@ class Parser:
         ('right', 'UMINUS'),
     )
 
-    # ----------------------------- Reglas del parser -----------------------------
-
+    # ----------------------------- Programa principal -----------------------------
     def p_program(self, p):
-        'program : statement_list'
+        'program : global_statement_list'
         p[0] = ('program', p[1])
 
-    def p_statement_list(self, p):
-        '''statement_list : statement
-                          | statement_list statement'''
+    def p_global_statement_list(self, p):
+        '''global_statement_list : global_statement
+                                 | global_statement_list global_statement'''
         if len(p) == 2:
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[2]]
 
-    def p_statement_declaration(self, p):
-        '''statement : type id_list
-                     | type id_list ASSIGN expression'''
+    def p_global_statement(self, p):
+        '''global_statement : declaration
+                            | assignment
+                            | function_def
+                            | type_def
+                            | instance'''
+        p[0] = p[1]
+
+    # ----------------------------- Sentencias (solo para funciones) -----------------------------
+    def p_statement_list(self, p):
+        '''statement_list : statement SEMICOLON
+                        | statement_list statement SEMICOLON'''
+        if len(p) == 3:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[2]]
+
+
+    def p_statement(self, p):
+        '''statement : declaration
+                     | assignment
+                     | return_stmt
+                     | instance
+                     | type_def'''
+        p[0] = p[1]
+
+    # ----------------------------- Declaraciones y asignaciones -----------------------------
+    def p_declaration(self, p):
+        '''declaration : type id_list
+                       | type id_list ASSIGN expression'''
         if len(p) == 3:
             p[0] = ('decl', p[1], p[2])
         else:
             p[0] = ('decl_assign', p[1], p[2], p[4])
 
-    def p_id_list_single(self, p):
-        'id_list : ID'
-        p[0] = [p[1]]
+    def p_assignment(self, p):
+        'assignment : expression ASSIGN expression'
+        p[0] = ('assign', p[1], p[3])
 
-    def p_id_list_rec(self, p):
-        'id_list : id_list COMMA ID'
-        p[0] = p[1] + [p[3]]
+    def p_return_stmt(self, p):
+        'return_stmt : RETURN expression'
+        p[0] = ('return', p[2])
 
+    # ----------------------------- Definición de funciones -----------------------------
+    def p_function_def(self, p):
+        'function_def : DEF type ID LPAREN param_list RPAREN COLON LBRACE statement_list RBRACE'
+        p[0] = ('func_def', p[2], p[3], p[5], p[9])
 
+    def p_param_list(self, p):
+        '''param_list : param
+                      | param_list SEMICOLON param
+                      | empty'''
+        if len(p) == 2:
+            if p[1] is None:
+                p[0] = []
+            else:
+                p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
+
+    def p_param(self, p):
+        'param : type ID'
+        p[0] = (p[1], p[2])
+
+    # ----------------------------- Tipos e identificadores -----------------------------
     def p_type(self, p):
         '''type : base_type
                 | base_type LBRACKET NUMBER RBRACKET'''
@@ -59,11 +106,41 @@ class Parser:
 
     def p_base_type(self, p):
         '''base_type : INT
-                    | FLOAT
-                    | CHAR
-                    | BOOL'''
+                     | FLOAT
+                     | CHAR
+                     | BOOL'''
         p[0] = p[1]
 
+    def p_id_list_single(self, p):
+        'id_list : ID'
+        p[0] = [p[1]]
+
+    def p_id_list_rec(self, p):
+        'id_list : id_list COMMA ID'
+        p[0] = p[1] + [p[3]]
+
+    # ----------------------------- Registros -----------------------------
+    def p_type_def(self, p):
+        'type_def : TYPE ID COLON LBRACE field_list RBRACE'
+        p[0] = ('type_def', p[2], p[5])
+
+    def p_field_list(self, p):
+        '''field_list : field
+                      | field_list field'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[2]]
+
+    def p_field(self, p):
+        'field : type ID'
+        p[0] = (p[1], p[2])
+
+    def p_instance(self, p):
+        'instance : ID ID'
+        p[0] = ('instance', p[1], p[2])
+
+    # ----------------------------- Expresiones -----------------------------
     def p_expression_binaria(self, p):
         '''expression : expression PLUS expression
                       | expression MINUS expression
@@ -103,29 +180,9 @@ class Parser:
         'expression : expression LBRACKET expression RBRACKET'
         p[0] = ('array_access', p[1], p[3])
 
-    def p_statement_assign(self, p):
-        'statement : expression ASSIGN expression'
-        p[0] = ('assign', p[1], p[3])
-
-    def p_statement_function(self, p):
-        'statement : DEF type ID LPAREN param_list RPAREN COLON LBRACE statement_list RBRACE'
-        p[0] = ('func_def', p[2], p[3], p[5], p[9])
-
-    def p_param_list(self, p):
-        '''param_list : param
-                      | param_list SEMICOLON param'''
-        if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[3]]
-
-    def p_param(self, p):
-        'param : type ID'
-        p[0] = (p[1], p[2])
-
-    def p_statement_return(self, p):
-        'statement : RETURN expression'
-        p[0] = ('return', p[2])
+    def p_expression_field_access(self, p):
+        'expression : expression DOT ID'
+        p[0] = ('field_access', p[1], p[3])
 
     def p_expression_func_call(self, p):
         'expression : ID LPAREN arg_list RPAREN'
@@ -143,31 +200,7 @@ class Parser:
         else:
             p[0] = p[1] + [p[3]]
 
-    def p_statement_type_def(self, p):
-        'statement : TYPE ID COLON LBRACE field_list RBRACE'
-        p[0] = ('type_def', p[2], p[5])
-
-    def p_statement_instance(self, p):
-        'statement : ID ID'
-        p[0] = ('instance', p[1], p[2])
-
-
-    def p_field_list(self, p):
-        '''field_list : field
-                      | field_list field'''
-        if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[2]]
-
-    def p_field(self, p):
-        'field : type ID'
-        p[0] = (p[1], p[2])
-
-    def p_expression_field_access(self, p):
-        'expression : expression DOT ID'
-        p[0] = ('field_access', p[1], p[3])
-
+    # ----------------------------- Utilidades -----------------------------
     def p_empty(self, p):
         'empty :'
         p[0] = None

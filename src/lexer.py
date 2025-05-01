@@ -42,7 +42,7 @@ class Lexer:
 
     # Números enteros en decimal, binario, octal, hexadecimal
     def t_NUMBER(self, t):
-        r'0b[01]+|0o[0-7]+|0x[A-F0-9]+|[0-9]+'
+        r'0b[01]+|0o[0-7]+|0x[A-F0-9]+|0|[1-9][0-9]*'
         try:
             if t.value.startswith("0b"):
                 t.value = int(t.value, 2)
@@ -56,12 +56,13 @@ class Lexer:
         except ValueError:
             print(f"[Lexer Error] Número entero mal formado '{t.value}' en línea {t.lineno}")
             t.lexer.skip(len(t.value))
-
-    # Caracteres entre comillas simples
+            
+    # Caracteres entre comillas simples - con corrección de la p2
     def t_CHARACTER(self, t):
-        r'\'[ -~]\''
-        t.value = t.value[1]  # quitamos las comillas
+        r'\'[a-zA-Z0-9]\''
+        t.value = t.value[1]
         return t
+
 
     # Comentarios de una línea
     t_ignore_COMMENT = r'\#.*'
