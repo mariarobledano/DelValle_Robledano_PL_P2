@@ -1,0 +1,13 @@
+int x
+float y
+bool resultado
+
+x = 3 + 4             # ✔️ int + int → int
+y = x * 2.5           # ✔️ int * float → float
+resultado = x > 2     # ✔️ int > int → bool
+resultado = true and false  # ✔️ bool and bool → bool
+resultado = x > 2 and true  # ✔️ bool and bool → bool
+
+resultado = 3 + false       # ❌ int + bool → error
+x = true                   # ❌ int ← bool → error
+y = 'a' + 3.0              # ✔️ char + float → float

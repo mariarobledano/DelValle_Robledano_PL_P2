@@ -7,10 +7,9 @@ class Lexer:
     def __init__(self):
         self.lexer = lex.lex(module=self)
     
-    # Comentarios multilínea
+    # Comentarios multilínea (cerrados y no cerrados)
     def t_MULTILINE_COMMENT(self, t):
         r"'''(.|\n)*?'''"
-        
         if not t.value.endswith("'''"):
             print(f"[Lexer Error] Comentario multilínea no cerrado en línea {t.lineno}")
             t.lexer.skip(len(t.value))
@@ -18,16 +17,14 @@ class Lexer:
             t.lexer.lineno += t.value.count('\n')
             return None
 
-    def t_MULTILINE_COMMENT_UNCLOSED(self, t):
-        r"'''(.|\n)*"
-        print(f"[Lexer Error] Comentario multilínea no cerrado en línea {t.lineno}")
-        t.lexer.skip(len(t.value))
-        return None
-
     # Identificadores y palabras reservadas
     def t_ID(self, t):
         r'[a-zA-Z_][a-zA-Z_0-9]*'
         t.type = reserved.get(t.value, 'ID')
+        if t.type == 'TRUE':
+            t.value = True
+        elif t.type == 'FALSE':
+            t.value = False
         return t
 
     # Números flotantes (incluye notación científica)
@@ -38,7 +35,6 @@ class Lexer:
             return t
         except ValueError:
             print(f"[Lexer Error] Número flotante mal formado '{t.value}' en línea {t.lineno}")
-            
 
     # Números enteros en decimal, binario, octal, hexadecimal
     def t_NUMBER(self, t):
@@ -56,13 +52,12 @@ class Lexer:
         except ValueError:
             print(f"[Lexer Error] Número entero mal formado '{t.value}' en línea {t.lineno}")
             t.lexer.skip(len(t.value))
-            
+
     # Caracteres entre comillas simples - con corrección de la p2
     def t_CHARACTER(self, t):
         r'\'[a-zA-Z0-9]\''
         t.value = t.value[1]
         return t
-
 
     # Comentarios de una línea
     t_ignore_COMMENT = r'\#.*'

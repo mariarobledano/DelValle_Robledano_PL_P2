@@ -21,6 +21,7 @@ class ParserRunner:
         else:
             print("  " * indent + str(tree))
 
+
     def run(self, input_dir='tests'):
         input_dir = os.path.join(os.path.dirname(__file__), '..', input_dir)
         output_dir = os.path.join(input_dir, 'tokens')
@@ -55,10 +56,10 @@ class ParserRunner:
                 if success:
                     print(f"\u2705 {filename} procesado correctamente. Tokens en: tests/tokens/{os.path.basename(output_path)}")
                     try:
-                        result = self.parser.parse(data, lexer=self.lexer) 
+                        result = self.parser.parse(data, lexer=self.lexer)
                         print(f"\U0001F333 Árbol sintáctico de {filename}:\n")
                         self.pretty_print(result)
-                        self.parser.symbol_table.debug_print()  
+                        self.parser.symbol_table.debug_print() 
                         print()
                     except Exception as e:
                         print(f"\u274C Error de sintaxis en {filename}: {e}\n")

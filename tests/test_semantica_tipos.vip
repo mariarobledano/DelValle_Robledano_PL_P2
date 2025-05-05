@@ -1,0 +1,19 @@
+int x
+float y
+char letra
+bool esValido
+
+x = 5          # ✔️ correcto: int ← int
+x = 'a'        # ✔️ correcto: int ← char (conversión automática)
+x = true       # ❌ error: int ← bool
+
+y = 3.14       # ✔️ correcto: float ← float
+y = 4          # ✔️ correcto: float ← int (conversión automática)
+y = 'c'        # ✔️ correcto: float ← char (conversión automática)
+y = false      # ❌ error: float ← bool
+
+letra = 'x'    # ✔️ correcto: char ← char
+letra = 97     # ❌ error: char ← int
+
+esValido = true    # ✔️ correcto: bool ← bool
+esValido = 1       # ❌ error: bool ← int

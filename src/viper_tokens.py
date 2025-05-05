@@ -12,10 +12,10 @@ reserved = {
     'type': 'TYPE',
     'if': 'IF',
     'else': 'ELSE',
-    'while': 'WHILE',
+    #'while': 'WHILE',
     'and': 'AND',
     'or': 'OR',
-    'not': 'NOT'
+    'not': 'NOT',
 }
 
 # Lista de tokens
@@ -33,5 +33,7 @@ tokens = [
     'LBRACE', 'RBRACE',
     'COMMA', 'COLON', 'DOT', 'SEMICOLON',
 
-    'NEWLINE',
+    #'NEWLINE',
+    'THEN',
+    
 ] + list(reserved.values())
