@@ -27,6 +27,7 @@ class Parser:
         p[0] = ('program', p[1])
 
     # ----------------------------- Statement List -----------------------------
+    
     def p_statement_list(self, p):
         '''statement_list : statement
                           | statement_list statement '''
@@ -34,15 +35,60 @@ class Parser:
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[2]]
-
-    # ----------------------------- Declaration -----------------------------
+    
+    # ----------------------------- Statements -----------------------------
+    def p_statement(self, p):
+        '''statement : statement_declaration
+                    | statement_assign
+                    | statement_function
+                    | statement_return
+                    | statement_if
+                    | statement_instance
+                    | statement_type_def'''
+        p[0] = p[1]
+    
     def p_statement_declaration(self, p):
-        '''statement : type id_list
-                     | type id_list ASSIGN expression'''
+        '''statement_declaration : type id_list
+                                | type id_list ASSIGN expression'''
         if len(p) == 3:
             p[0] = ('decl', p[1], p[2])
         else:
             p[0] = ('decl_assign', p[1], p[2], p[4])
+    # Regla para asignaciones
+    def p_statement_assign(self, p):
+        'statement_assign : expression ASSIGN expression'
+        p[0] = ('assign', p[1], p[3])
+
+    # Regla para funciones
+    def p_statement_function(self, p):
+        'statement_function : DEF type ID LPAREN param_list RPAREN COLON LBRACE statement_list RBRACE'
+        self.current_block = 'function'
+        p[0] = ('func_def', p[2], p[3], p[5], p[9])
+        self.current_block = None  # Salimos del bloque de la función
+
+    # Regla para `return`
+    def p_statement_return(self, p):
+        'statement_return : RETURN expression'
+        if self.current_block == 'function':
+            p[0] = ('return', p[2])
+        else:
+            print(f"[Syntax Error] 'return' fuera de una función en línea {p.lineno}")
+            raise SyntaxError("El 'return' debe estar dentro de una función.")
+
+    # Regla para `if`
+    def p_statement_if(self, p):
+        'statement_if : IF expression statement ELSE statement'
+        p[0] = ('if', p[2], p[3], p[5])
+
+    # Regla para `instance` (declaración de instancias)
+    def p_statement_instance(self, p):
+        'statement_instance : ID ID'
+        p[0] = ('instance', p[1], p[2])
+
+    # ----------------------------- Type Definitions -----------------------------
+    def p_statement_type_def(self, p):
+        'statement_type_def : TYPE ID COLON LBRACE field_list RBRACE'
+        p[0] = ('type_def', p[2], p[5])
 
     def p_id_list_single(self, p):
         'id_list : ID'
@@ -58,7 +104,7 @@ class Parser:
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = ('vector', p[1], p[3])
+            p[0] = ('vector', p[1], p[3])  
 
     def p_base_type(self, p):
         '''base_type : INT
@@ -67,69 +113,79 @@ class Parser:
                     | BOOL'''
         p[0] = p[1]
 
+
     # ----------------------------- Expressions -----------------------------
-    # Al separar estos tipos de operaciones, logramos que el parser pueda manejar las expresiones de manera más clara y sin ambigüedades, respetando la precedencia adecuada y evitando conflictos.
+    def p_expression(self, p):
+        '''expression : expression_binaria
+                    | expression_comparacion
+                    | expression_logica
+                    | expression_unaria
+                    | expression_group
+                    | expression_number
+                    | expression_var
+                    | expression_array_access
+                    | expression_field_access
+                    | expression_func_call'''
+        p[0] = p[1]
+
     def p_expression_binaria(self, p):
-        '''expression : expression PLUS expression
-                    | expression MINUS expression
-                    | expression TIMES expression
-                    | expression DIVIDE expression'''
+        '''expression_binaria : expression PLUS expression
+                            | expression MINUS expression
+                            | expression TIMES expression
+                            | expression DIVIDE expression'''
         p[0] = ('binop', p[2], p[1], p[3])
 
     # Reglas de operaciones de comparación
     def p_expression_comparacion(self, p):
-        '''expression : expression EQ expression
-                    | expression GT expression
-                    | expression GE expression
-                    | expression LT expression
-                    | expression LE expression'''
+        '''expression_comparacion : expression EQ expression
+                                | expression GT expression
+                                | expression GE expression
+                                | expression LT expression
+                                | expression LE expression'''
         p[0] = ('binop', p[2], p[1], p[3])
 
     # Expresión lógica (AND, OR)
     def p_expression_logica(self, p):
-        '''expression : expression AND expression
-                    | expression OR expression'''
+        '''expression_logica : expression AND expression
+                            | expression OR expression'''
         p[0] = ('binop', p[2], p[1], p[3])
 
-
     def p_expression_unaria(self, p):
-        '''expression : MINUS expression %prec UMINUS
-                      | NOT expression'''
+        '''expression_unaria : MINUS expression %prec UMINUS
+                            | NOT expression'''
         p[0] = ('unop', p[1], p[2])
 
     def p_expression_group(self, p):
-        'expression : LPAREN expression RPAREN'
-        p[0] = p[2]
+        'expression_group : LPAREN expression RPAREN'
+        p[0] = p[2] 
 
     def p_expression_number(self, p):
-        '''expression : NUMBER
-                      | FLOAT_NUMBER
-                      | TRUE
-                      | FALSE
-                      | CHARACTER'''
-        p[0] = ('const', p[1])
+        '''expression_number : NUMBER
+                            | FLOAT_NUMBER
+                            | TRUE
+                            | FALSE
+                            | CHARACTER'''
+        p[0] = ('const', p[1])  
 
-    def p_expression_id(self, p):
-        'expression : ID'
+    # Para el acceso a una variable
+    def p_expression_var(self, p):
+        'expression_var : ID'
         p[0] = ('var', p[1])
 
+    # Para el acceso a un índice de un array
     def p_expression_array_access(self, p):
-        'expression : expression LBRACKET expression RBRACKET'
-        p[0] = ('array_access', p[1], p[3])
+        'expression_array_access : expression LBRACKET expression RBRACKET'
+        p[0] = ('array_access', p[1], p[3]) 
 
-    # ----------------------------- Assignments -----------------------------
-    def p_statement_assign(self, p):
-        'statement : expression ASSIGN expression'
-        p[0] = ('assign', p[1], p[3])
+    # Para el acceso a campos
+    def p_expression_field_access(self, p):
+        'expression_field_access : expression DOT ID'
+        p[0] = ('field_access', p[1], p[3])
 
-    # ----------------------------- Functions -----------------------------
-    def p_statement_function(self, p):
-        'statement : DEF type ID LPAREN param_list RPAREN COLON LBRACE statement_list RBRACE'
-        
-        self.current_block = 'function'  # Esto asegura que estamos dentro de una función
-        p[0] = ('func_def', p[2], p[3], p[5], p[9])
-        self.current_block = None  # Salimos del bloque de la función
-    
+    def p_expression_func_call(self, p):
+        'expression_func_call : ID LPAREN arg_list RPAREN'
+        p[0] = ('func_call', p[1], p[3])
+
     # ----------------------------- Parameters -----------------------------
 
     def p_param_list(self, p):
@@ -144,24 +200,6 @@ class Parser:
         'param : type ID'
         p[0] = (p[1], p[2])
 
-    def p_statement_return(self, p):
-        'statement : RETURN expression'
-        if self.current_block == 'function':
-            p[0] = ('return', p[2])
-        else:
-            print(f"[Syntax Error] 'return' fuera de una función en línea {p.lineno}")
-            raise SyntaxError("El 'return' debe estar dentro de una función.")
-    
-    def p_statement_if(self, p):
-        'statement : IF expression statement ELSE statement'
-        p[0] = ('if', p[2], p[3], p[5])
-
-
-    # ----------------------------- Function Calls -----------------------------
-    def p_expression_func_call(self, p):
-        'expression : ID LPAREN arg_list RPAREN'
-        p[0] = ('func_call', p[1], p[3])
-
     def p_arg_list(self, p):
         '''arg_list : expression
                     | arg_list COMMA expression
@@ -173,16 +211,6 @@ class Parser:
                 p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
-
-    # ----------------------------- Type Definitions -----------------------------
-    def p_statement_type_def(self, p):
-        'statement : TYPE ID COLON LBRACE field_list RBRACE'
-        p[0] = ('type_def', p[2], p[5])
-
-    # ----------------------------- Instances -----------------------------
-    def p_statement_instance(self, p):
-        'statement : ID ID'
-        p[0] = ('instance', p[1], p[2])
 
     # ----------------------------- Field List -----------------------------
     def p_field_list(self, p):
@@ -197,10 +225,6 @@ class Parser:
         'field : type ID'
         p[0] = (p[1], p[2])
 
-    # ----------------------------- Field Access -----------------------------
-    def p_expression_field_access(self, p):
-        'expression : expression DOT ID'
-        p[0] = ('field_access', p[1], p[3])
 
     # ----------------------------- Empty Rule -----------------------------
     def p_empty(self, p):
@@ -210,11 +234,15 @@ class Parser:
     # ----------------------------- Error Handling -----------------------------
     def p_error(self, p):
         if p:
-            print(f"[Syntax Error] Token inesperado '{p.value}' en línea {p.lineno}")
+            print(f"[Syntax Error] No se esperaba '{p.value}' (tipo: {p.type}) en la línea {p.lineno}")
         else:
             print("[Syntax Error] Fin de entrada inesperado")
 
     def parse(self, input_text, lexer=None):
         return self.parser.parse(input_text, lexer=lexer)
-    
+
+""" def p_record_type(self, p):
+        'record_type : TYPE ID COLON LBRACE field_list RBRACE'
+        p[0] = ('record', p[2], p[5])  
+""" 
 

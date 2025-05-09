@@ -1,0 +1,9 @@
+int[3] v
+v[3] = 5        # índice fuera de rango (semántico, pero al menos sintácticamente válido)
+
+return 42       # return fuera de función
+
+def int mal(int x) : {
+    int x       # redeclaración del mismo identificador (dependiendo del análisis posterior)
+    return x
+}

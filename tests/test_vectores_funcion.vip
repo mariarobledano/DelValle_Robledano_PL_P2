@@ -1,0 +1,11 @@
+def int sumar(int[3] datos) : {
+    return datos[0] + datos[1] + datos[2]
+}
+
+int[3] v
+v[0] = 1
+v[1] = 2
+v[2] = 3
+
+int resultado
+resultado = sumar(v)

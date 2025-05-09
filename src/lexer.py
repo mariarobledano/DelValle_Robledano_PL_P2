@@ -37,7 +37,7 @@ class Lexer:
 
     # Números enteros en decimal, binario, octal, hexadecimal (no permitir ceros no significativos)
     def t_NUMBER(self, t):
-        r'0b[01]+|0o[0-7]+|0x[A-F0-9]+|[1-9][0-9]*'  
+        r'0b[01]+|0o[0-7]+|0x[A-F0-9]+|0|[1-9][0-9]*'
         try:
             if t.value.startswith("0b"):
                 t.value = int(t.value, 2)
@@ -63,12 +63,6 @@ class Lexer:
             print(f"[Lexer Error] Carácter fuera del rango ASCII imprimible en línea {t.lineno}")
             t.lexer.skip(len(t.value))
 
-    # Comentarios de una línea
-    t_ignore_COMMENT = r'\#.*'
-
-    # Ignorar espacios y tabulaciones
-    t_ignore = ' \t'
-
     # Contador de líneas
     def t_NEWLINE(self, t):
         r'\n+'
@@ -82,6 +76,7 @@ class Lexer:
         else:
             print(f"[Lexer Error] Carácter ilegal '{t.value[0]}' en línea {t.lineno}")
             t.lexer.skip(1)
+
 
     # Operadores y símbolos
     t_ASSIGN    = r'='
@@ -104,3 +99,7 @@ class Lexer:
     t_GE        = r'>='
     t_LT        = r'<'
     t_LE        = r'<='
+    t_ignore    = ' \t'
+    t_ignore_COMMENT    = r'\#.*'
+    t_ignore_COMMENT_   = r'/\*([^*]|\*+[^*/])*\*+/'
+
