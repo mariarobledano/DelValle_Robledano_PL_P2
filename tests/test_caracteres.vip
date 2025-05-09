@@ -1,0 +1,6 @@
+# Test para caracteres válidos y escapados
+
+char1 = 'a'  # Caracter válido
+char2 = 'z'  # Caracter válido
+char3 = '\''  # Caracter escapado (comilla simple)
+char4 = '\\'  # Caracter escapado (barra invertida)

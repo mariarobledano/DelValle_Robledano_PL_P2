@@ -2,43 +2,42 @@ import ply.lex as lex
 from viper_tokens import tokens, reserved
 
 class Lexer:
-    tokens = tokens 
+    tokens = tokens
     
     def __init__(self):
         self.lexer = lex.lex(module=self)
-    
-    # Comentarios multilínea (cerrados y no cerrados)
+
+    # Comentarios multilínea
     def t_MULTILINE_COMMENT(self, t):
-        r"'''(.|\n)*?'''"
-        if not t.value.endswith("'''"):
-            print(f"[Lexer Error] Comentario multilínea no cerrado en línea {t.lineno}")
-            t.lexer.skip(len(t.value))
-        else:
-            t.lexer.lineno += t.value.count('\n')
-            return None
+        r"\'\'\'(.|\n)*?\'\'\'"  
+        t.lexer.lineno += t.value.count('\n')
+        return None
+
+    def t_MULTILINE_COMMENT_UNCLOSED(self, t):
+        r"\'\'\'(.|\n)*"  # Comentarios sin cerrar
+        print(f"[Lexer Error] Comentario multilínea no cerrado en línea {t.lineno}")
+        t.lexer.skip(len(t.value))
+        return None
 
     # Identificadores y palabras reservadas
     def t_ID(self, t):
         r'[a-zA-Z_][a-zA-Z_0-9]*'
         t.type = reserved.get(t.value, 'ID')
-        if t.type == 'TRUE':
-            t.value = True
-        elif t.type == 'FALSE':
-            t.value = False
         return t
 
     # Números flotantes (incluye notación científica)
     def t_FLOAT_NUMBER(self, t):
-        r'((\d+\.\d*)([eE][-+]?\d+)?|\d+[eE][-+]?\d+)'
+        r'(\d+\.\d+([eE][-+]?\d+)?|\d+[eE][-+]?\d+)'
         try:
             t.value = float(t.value)
             return t
         except ValueError:
             print(f"[Lexer Error] Número flotante mal formado '{t.value}' en línea {t.lineno}")
+            t.lexer.skip(len(t.value))
 
-    # Números enteros en decimal, binario, octal, hexadecimal
+    # Números enteros en decimal, binario, octal, hexadecimal (no permitir ceros no significativos)
     def t_NUMBER(self, t):
-        r'0b[01]+|0o[0-7]+|0x[A-F0-9]+|0|[1-9][0-9]*'
+        r'0b[01]+|0o[0-7]+|0x[A-F0-9]+|[1-9][0-9]*'  
         try:
             if t.value.startswith("0b"):
                 t.value = int(t.value, 2)
@@ -53,11 +52,16 @@ class Lexer:
             print(f"[Lexer Error] Número entero mal formado '{t.value}' en línea {t.lineno}")
             t.lexer.skip(len(t.value))
 
-    # Caracteres entre comillas simples - con corrección de la p2
+    # Caracteres entre comillas simples (limitado a ASCII imprimible)
     def t_CHARACTER(self, t):
-        r'\'[a-zA-Z0-9]\''
-        t.value = t.value[1]
-        return t
+        r"\'(.)\'"  
+        c = t.value[1]
+        if 32 <= ord(c) <= 126: 
+            t.value = c
+            return t
+        else:
+            print(f"[Lexer Error] Carácter fuera del rango ASCII imprimible en línea {t.lineno}")
+            t.lexer.skip(len(t.value))
 
     # Comentarios de una línea
     t_ignore_COMMENT = r'\#.*'
@@ -72,8 +76,12 @@ class Lexer:
 
     # Manejo de errores
     def t_error(self, t):
-        print(f"[Lexer Error] Carácter ilegal '{t.value[0]}' en línea {t.lineno}")
-        t.lexer.skip(1)
+        if t.value[0] in ["'", "\"", "\\"]:  
+            print(f"[Lexer Error] Carácter ilegal '{t.value[0]}' en línea {t.lineno}, ignorado.")
+            t.lexer.skip(1)
+        else:
+            print(f"[Lexer Error] Carácter ilegal '{t.value[0]}' en línea {t.lineno}")
+            t.lexer.skip(1)
 
     # Operadores y símbolos
     t_ASSIGN    = r'='

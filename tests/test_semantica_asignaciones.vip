@@ -1,5 +1,0 @@
-int x
-float y
-x = 5
-y = 3.14
-z = 10

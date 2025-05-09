@@ -1,0 +1,3 @@
+# Test para caracteres fuera del rango ASCII imprimible
+
+invalid_char = '\x01'  # Debería dar un error en el lexer porque es un carácter no imprimible

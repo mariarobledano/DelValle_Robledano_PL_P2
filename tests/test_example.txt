@@ -1,0 +1,6 @@
+int x
+float y = 3.14
+bool is_valid = true
+x = 5
+y = x + 2.5
+

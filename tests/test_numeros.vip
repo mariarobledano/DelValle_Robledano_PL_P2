@@ -1,0 +1,6 @@
+# Test para números binarios, octales, hexadecimales y decimales
+
+binario = 0b11010101  # Binario
+octal = 0o123  # Octal
+hexadecimal = 0xFF  # Hexadecimal
+decimal = 12345  # Decimal

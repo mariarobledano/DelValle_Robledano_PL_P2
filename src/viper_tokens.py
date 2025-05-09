@@ -15,7 +15,7 @@ reserved = {
     #'while': 'WHILE',
     'and': 'AND',
     'or': 'OR',
-    'not': 'NOT',
+    'not': 'NOT'
 }
 
 # Lista de tokens
@@ -34,6 +34,4 @@ tokens = [
     'COMMA', 'COLON', 'DOT', 'SEMICOLON',
 
     #'NEWLINE',
-    'THEN',
-    
 ] + list(reserved.values())

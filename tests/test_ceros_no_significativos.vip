@@ -1,0 +1,3 @@
+# Test para números con ceros no significativos
+
+mal_num = 01234  # Debería dar un error en el lexer por ceros no significativos

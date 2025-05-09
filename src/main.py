@@ -21,14 +21,13 @@ class ParserRunner:
         else:
             print("  " * indent + str(tree))
 
-
     def run(self, input_dir='tests'):
         input_dir = os.path.join(os.path.dirname(__file__), '..', input_dir)
         output_dir = os.path.join(input_dir, 'tokens')
         os.makedirs(output_dir, exist_ok=True)
 
         for filename in os.listdir(input_dir):
-            if filename.endswith(".vip"):
+            if filename.endswith(".vip") or filename.endswith(".txt"):
                 input_path = os.path.join(input_dir, filename)
                 output_path = os.path.join(output_dir, os.path.splitext(filename)[0] + ".token")
 
@@ -59,12 +58,14 @@ class ParserRunner:
                         result = self.parser.parse(data, lexer=self.lexer)
                         print(f"\U0001F333 Árbol sintáctico de {filename}:\n")
                         self.pretty_print(result)
-                        self.parser.symbol_table.debug_print() 
                         print()
                     except Exception as e:
                         print(f"\u274C Error de sintaxis en {filename}: {e}\n")
+                else:
+                    print(f"\u274C {filename} tuvo errores.\n")
 
 # Para ejecutar desde consola:
 if __name__ == "__main__":
+    lexer_only = '--lexer' in sys.argv 
     runner = ParserRunner()
     runner.run()
