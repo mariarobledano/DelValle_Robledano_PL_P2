@@ -3,6 +3,8 @@ import os
 
 from lexer import Lexer
 from parser import Parser
+from semantic import SemanticAnalyzer
+
 
 class ParserRunner:
     def __init__(self):
@@ -59,6 +61,13 @@ class ParserRunner:
                         print(f"\U0001F333 Árbol sintáctico de {filename}:\n")
                         self.pretty_print(result)
                         print()
+                        
+                        semantic = SemanticAnalyzer()
+                        try:
+                            semantic.analyze(result)
+                        except Exception as e:
+                            print(f"[Semantic Error] {e}")
+
                     except Exception as e:
                         print(f"\u274C Error de sintaxis en {filename}: {e}\n")
                 else:
