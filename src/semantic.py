@@ -7,11 +7,32 @@ class SemanticError(Exception):
 
 class SemanticAnalyzer:
     def __init__(self):
-        self.symbol_table = {}  # Tabla de símbolos para variables
+        self.symbol_stack = [{}]  # Tabla de símbolos para variables
         self.type_table = {}    # Tabla de tipos (si es necesario)
         self.functions = {}     # Funciones definidas
         self.current_function = None
+    
+    def _enter_scope(self):
+        self.symbol_stack.append({})
 
+    def _exit_scope(self):
+        self.symbol_stack.pop()
+
+    def _current_scope(self):
+        return self.symbol_stack[-1]
+
+    def _declare_variable(self, name, vtype):
+        current = self._current_scope()
+        if name in current:
+            raise SemanticError(f"La variable '{name}' ya está declarada en este ámbito.")
+        current[name] = vtype
+
+    def _lookup_variable(self, name):
+        for scope in reversed(self.symbol_stack):
+            if name in scope:
+                return scope[name]
+        raise SemanticError(f"La variable '{name}' no ha sido declarada.")
+ 
     def analyze(self, node):
         if isinstance(node, list):
             for n in node:
@@ -54,6 +75,8 @@ class SemanticAnalyzer:
             self._handle_const(nodo)  # Manejo de constantes
         elif nodetype == 'var':
             self._handle_var(nodo)  # Manejo de variables
+        elif nodetype == 'while':
+            self._handle_while(nodo)
         else:
             raise SemanticError(f"Tipo de sentencia desconocido: {nodetype}")
 
@@ -61,9 +84,7 @@ class SemanticAnalyzer:
         tipo, lista_ids = stmt[1], stmt[2]
         
         for var in lista_ids:
-            if var in self.symbol_table:
-                raise SemanticError(f"La variable '{var}' ya está declarada.")
-            self.symbol_table[var] = tipo
+            self._declare_variable(var, tipo)
             print(f"Declarada variable '{var}' de tipo {tipo}")  # Depuración
 
     def _handle_assignment(self, node):
@@ -75,8 +96,7 @@ class SemanticAnalyzer:
         # Comprobamos el tipo de la variable en el lado izquierdo
         if lhs[0] == 'var':  # Si es una variable
             var_name = lhs[1]
-            if var_name not in self.symbol_table:
-                raise SemanticError(f"La variable '{var_name}' no ha sido declarada antes de su uso.")
+            self._lookup_variable(var_name)
             print(f"Asignando a la variable '{var_name}'")  # Depuración
         elif lhs[0] in ('array_access', 'field_access'):  # Si es acceso a un array o campo
             self.analyze(lhs)
@@ -97,25 +117,30 @@ class SemanticAnalyzer:
     def _handle_decl_assign(self, node):
         _, tipo, lista_ids, expr = node
         for var in lista_ids:
-            if var in self.symbol_table:
-                raise SemanticError(f"Variable '{var}' ya declarada.")
-            self.symbol_table[var] = tipo
+            self._declare_variable(var, tipo)
         self.analyze(expr)  # Analizamos la expresión
 
 
 
     def _handle_function_definition(self, stmt):
         func_type, func_name, params, body = stmt[1], stmt[2], stmt[3], stmt[4]
-        
+
         if func_name in self.functions:
             raise SemanticError(f"La función '{func_name}' ya está definida.")
-        
+
         self.functions[func_name] = {'type': func_type, 'params': params}
-        
-        # Añadir los parámetros a la tabla de símbolos
-        for param in params:
-            param_type, param_name = param
-            self.symbol_table[param_name] = param_type
+
+        self._enter_scope()  # Nuevo ámbito para la función
+
+        for param_type, param_name in params:
+            self._declare_variable(param_name, param_type)
+
+        self.current_function = func_name
+        for stmt in body:
+            self._analyze_statement(stmt)
+        self.current_function = None
+
+        self._exit_scope()
 
     def _handle_return(self, stmt):
         if self.current_function is None:
@@ -123,7 +148,7 @@ class SemanticAnalyzer:
         
         expr = stmt[1]
         
-        func_type = self.symbol_table.get(self.current_function)
+        func_type = self.functions[self.current_function]['type']
         expr_type = self._get_expression_type(expr)
 
         if func_type != expr_type:
@@ -141,6 +166,16 @@ class SemanticAnalyzer:
         if false_stmt:
             self._analyze_statement(false_stmt)
 
+    def _handle_while(self, stmt):
+        condition, body = stmt[1], stmt[2]
+
+        condition_type = self._get_expression_type(condition)
+        if condition_type != 'bool':
+            raise SemanticError("La condición del 'while' debe ser de tipo 'bool'.")
+
+        for inner_stmt in body:
+            self._analyze_statement(inner_stmt)
+        
     def _handle_program(self, node):
         for stmt in node[1]:
             self._analyze_statement(stmt)
@@ -191,23 +226,30 @@ class SemanticAnalyzer:
 
     def _get_expression_type(self, expr):
         if isinstance(expr, tuple):  # Si es una expresión compleja (binaria, unaria)
-            if expr[0] == 'binop':  # Si es una operación binaria
-                left_type = self._get_expression_type(expr[1])  # Tipo del operando izquierdo
-                right_type = self._get_expression_type(expr[2])  # Tipo del operando derecho
+            if expr[0] == 'binop':
+                operator = expr[1]
+                left_expr = expr[2]
+                right_expr = expr[3]
+                left_type = self._get_expression_type(left_expr)
+                right_type = self._get_expression_type(right_expr)
 
-                # Comprobamos si los operandos son del mismo tipo
                 if left_type != right_type:
                     raise SemanticError(f"Los tipos de los operandos no coinciden: {left_type} vs {right_type}.")
-                
+
+                # Devuelve el tipo de resultado esperado (por ejemplo, bool si es comparación)
+                if operator in ['==', '>', '<', '>=', '<=']:
+                    return 'bool'
                 return left_type
-            elif expr[0] == 'unop':  # Si es una operación unaria
-                return self._get_expression_type(expr[1])
+
         elif isinstance(expr, str):  # Si es una variable
-            if expr not in self.symbol_table:
-                raise SemanticError(f"La variable '{expr}' no ha sido declarada.")
-            return self.symbol_table[expr]  # Devolvemos el tipo de la variable
-        elif isinstance(expr, (int, float, bool)):  # Si es un literal
-            return type(expr).__name__  # Devolvemos el tipo del valor literal
+            return self._lookup_variable(expr)
+        elif isinstance(expr, (int, float, bool)):
+            if isinstance(expr, bool):
+                return 'bool'
+            elif isinstance(expr, int):
+                return 'int'
+            elif isinstance(expr, float):
+                return 'float'
         else:
             raise SemanticError(f"Expresión desconocida: {expr}")
 
@@ -216,12 +258,8 @@ class SemanticAnalyzer:
         self.analyze(node[1])  # Analizamos el índice del array
         
         var_name = node[0][1]  # El nombre del array
-        if var_name not in self.symbol_table:
-            raise SemanticError(f"El arreglo '{var_name}' no ha sido declarado.")
-        return self.symbol_table[var_name]  # Devolvemos el tipo del arreglo
-
+        return self._lookup_variable(var_name)
+    
     def _handle_var(self, node):
         var_name = node[1]
-        if var_name not in self.symbol_table:
-            raise SemanticError(f"Variable '{var_name}' no declarada.")
-        return self.symbol_table[var_name]
+        return self._lookup_variable(var_name)

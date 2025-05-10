@@ -1,4 +1,5 @@
 import ply.lex as lex
+import re
 from viper_tokens import tokens, reserved
 
 class Lexer:
@@ -35,33 +36,34 @@ class Lexer:
             print(f"[Lexer Error] Número flotante mal formado '{t.value}' en línea {t.lineno}")
             t.lexer.skip(len(t.value))
 
+    def t_INVALID_LEADING_ZERO(self, t):
+        r'0[0-9]+'
+        print(f"[Lexer Error] Número decimal con ceros no significativos: '{t.value}' en línea {t.lineno}")
+        return None
     # Números enteros en decimal, binario, octal, hexadecimal (no permitir ceros no significativos)
     def t_NUMBER(self, t):
-        r'0b[01]+|0o[0-7]+|0x[A-F0-9]+|0|[1-9][0-9]*'
-        try:
-            if t.value.startswith("0b"):
-                t.value = int(t.value, 2)
-            elif t.value.startswith("0o"):
-                t.value = int(t.value, 8)
-            elif t.value.startswith("0x"):
-                t.value = int(t.value, 16)
-            else:
-                t.value = int(t.value)
-            return t
-        except ValueError:
-            print(f"[Lexer Error] Número entero mal formado '{t.value}' en línea {t.lineno}")
-            t.lexer.skip(len(t.value))
+        r'0b[01]+|0o[0-7]+|0x[0-9A-F]+|0|[1-9][0-9]*'
+        t.value = int(t.value, 0)
+        return t
 
     # Caracteres entre comillas simples (limitado a ASCII imprimible)
     def t_CHARACTER(self, t):
-        r"\'(.)\'"  
-        c = t.value[1]
-        if 32 <= ord(c) <= 126: 
-            t.value = c
+        r"'(\\\\|\\'|[^\\'])'"
+        raw = t.value[1:-1]  # quita las comillas externas
+
+        if raw == "\\\\":
+            t.value = "\\"
+            return t
+        elif raw == "\\'":
+            t.value = "'"
+            return t
+        elif len(raw) == 1 and 32 <= ord(raw) <= 126:
+            t.value = raw
             return t
         else:
-            print(f"[Lexer Error] Carácter fuera del rango ASCII imprimible en línea {t.lineno}")
-            t.lexer.skip(len(t.value))
+            print(f"[Lexer Error] Carácter inválido '{raw}' en línea {t.lineno}")
+            return None
+
 
     # Contador de líneas
     def t_NEWLINE(self, t):

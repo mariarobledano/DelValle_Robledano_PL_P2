@@ -72,18 +72,28 @@ class Parser:
         if self.current_block == 'function':
             p[0] = ('return', p[2])
         else:
-            print(f"[Syntax Error] 'return' fuera de una función en línea {p.lineno}")
+            print(f"[Syntax Error] 'return' fuera de una función en línea {p.lineno(1)}")
             raise SyntaxError("El 'return' debe estar dentro de una función.")
 
     # Regla para `if`
     def p_statement_if(self, p):
-        'statement_if : IF expression statement ELSE statement'
-        p[0] = ('if', p[2], p[3], p[5])
+        '''statement_if : IF expression COLON LBRACE statement_list RBRACE
+                        | IF expression COLON LBRACE statement_list RBRACE ELSE LBRACE statement_list RBRACE'''
+        if len(p) == 7:
+            p[0] = ('if', p[2], p[5], None)  # sin else
+        else:
+            p[0] = ('if', p[2], p[5], p[9])  # con else
+
 
     # Regla para `instance` (declaración de instancias)
     def p_statement_instance(self, p):
         'statement_instance : ID ID'
         p[0] = ('instance', p[1], p[2])
+
+    # Regla para 'while'
+    def p_statement_while(self, p):
+        'statement : WHILE expression COLON LBRACE statement_list RBRACE'
+        p[0] = ('while', p[2], p[5])
 
     # ----------------------------- Type Definitions -----------------------------
     def p_statement_type_def(self, p):

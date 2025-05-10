@@ -12,7 +12,7 @@ reserved = {
     'type': 'TYPE',
     'if': 'IF',
     'else': 'ELSE',
-    #'while': 'WHILE',
+    'while': 'WHILE',
     'and': 'AND',
     'or': 'OR',
     'not': 'NOT'

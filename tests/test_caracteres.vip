@@ -1,4 +1,8 @@
 # Test para caracteres válidos y escapados
+char char1
+char char2
+char char3
+char char4
 
 char1 = 'a'  # Caracter válido
 char2 = 'z'  # Caracter válido
